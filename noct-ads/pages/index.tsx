@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useRouter } from 'next/router'
 import useSWR from 'swr'
 import {
   LineChart, Line, BarChart, Bar,
@@ -25,6 +26,7 @@ function getLearningDays(startDate: string): number | null {
 }
 
 export default function Dashboard() {
+  const router = useRouter()
   const [period, setPeriod] = useState('last_30d')
   const [activeAlert, setActiveAlert] = useState<Alert | null>(null)
   const [activeMetric, setActiveMetric] = useState<string | null>(null)
@@ -63,6 +65,8 @@ export default function Dashboard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontFamily: 'IBM Plex Mono', fontWeight: 500, fontSize: 16, color: 'var(--text)' }}>NOCT</span>
           <span style={{ color: 'var(--text3)', fontSize: 12 }}>광고 관리 대시보드</span>
+          <button onClick={() => router.push('/trends')} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 7, border: '1px solid var(--border2)', background: 'transparent', color: 'var(--text2)', cursor: 'pointer', marginLeft: 8 }}>추세 그래프</button>
+          <button onClick={() => router.push('/changelog')} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 7, border: '1px solid var(--border2)', background: 'transparent', color: 'var(--text2)', cursor: 'pointer' }}>수정 기록</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* 기간 선택 */}

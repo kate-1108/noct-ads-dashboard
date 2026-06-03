@@ -149,3 +149,63 @@ export const METRIC_EXPLANATIONS: Record<string, { name: string; description: st
     why: 'CPA가 마진보다 높으면 팔수록 적자입니다. 목표 CPA = 판매가 × 마진율 × 0.4.',
   },
 }
+
+// 광고 수정 기록
+export interface ChangeLog {
+  id: string
+  campaignId: string
+  campaignName: string
+  date: string        // YYYY-MM-DD
+  category: ChangeCategory
+  title: string
+  detail: string
+  createdAt: string
+}
+
+export type ChangeCategory =
+  | 'budget'        // 예산 변경
+  | 'target'        // 타겟 변경
+  | 'creative'      // 소재 변경
+  | 'offer'         // 오퍼/가격 변경
+  | 'status'        // 캠페인 켜기/끄기
+  | 'other'         // 기타
+
+export const CHANGE_CATEGORY_LABELS: Record<ChangeCategory, { label: string; color: string; bg: string }> = {
+  budget:   { label: '예산',   color: '#BA7517', bg: '#FAEEDA' },
+  target:   { label: '타겟',   color: '#185FA5', bg: '#E6F1FB' },
+  creative: { label: '소재',   color: '#534AB7', bg: '#EEEDFE' },
+  offer:    { label: '오퍼',   color: '#993C1D', bg: '#FAECE7' },
+  status:   { label: '상태',   color: '#0F6E56', bg: '#E1F5EE' },
+  other:    { label: '기타',   color: '#5F5E5A', bg: '#F1EFE8' },
+}
+
+// 일별 지표 (그래프용)
+export interface DailyMetrics {
+  date: string
+  spend: number
+  impressions: number
+  linkClicks: number
+  ctr: number
+  cpc: number
+  frequency: number
+  cpm: number
+  purchases: number
+  purchaseValue: number
+  roas: number
+  cpa: number
+  lpvRate: number
+  purchaseRate: number
+}
+
+export const GRAPH_METRICS = [
+  { key: 'roas',         label: 'ROAS',          color: '#22d3a0', unit: '' },
+  { key: 'spend',        label: '지출',           color: '#f5c842', unit: '₩' },
+  { key: 'ctr',          label: 'CTR (%)',        color: '#5b9ef7', unit: '%' },
+  { key: 'cpc',          label: 'CPC (₩)',        color: '#EF9F27', unit: '₩' },
+  { key: 'cpm',          label: 'CPM (₩)',        color: '#AFA9EC', unit: '₩' },
+  { key: 'frequency',    label: '빈도',           color: '#ff5f5f', unit: '' },
+  { key: 'purchases',    label: '구매 건수',      color: '#5DCAA5', unit: '건' },
+  { key: 'cpa',          label: 'CPA (₩)',        color: '#F0997B', unit: '₩' },
+  { key: 'lpvRate',      label: 'LP 조회율 (%)',  color: '#85B7EB', unit: '%' },
+  { key: 'purchaseRate', label: '구매 전환율 (%)', color: '#97C459', unit: '%' },
+]
