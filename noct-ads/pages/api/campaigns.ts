@@ -1,3 +1,5 @@
+console.log('TOKEN:', process.env.META_ACCESS_TOKEN ? 'SET' : 'NOT SET')
+console.log('ACCOUNT:', process.env.META_AD_ACCOUNT_ID ? 'SET' : 'NOT SET')
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { fetchCampaigns } from '../../lib/meta'
 import { generateAlerts } from '../../lib/alerts'
