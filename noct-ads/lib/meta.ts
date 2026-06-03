@@ -14,7 +14,7 @@ const FIELDS = [
 ].join(',')
 
 export async function fetchCampaigns(datePreset = 'last_30d'): Promise<CampaignMetrics[]> {
-  if (!TOKEN || !ACCOUNT) {
+  if (!TOKEN || TOKEN === '' || !ACCOUNT || ACCOUNT === '') {
     console.warn('META credentials not set — returning mock data')
     return getMockData()
   }
