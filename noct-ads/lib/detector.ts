@@ -89,7 +89,7 @@ export async function detectAndRecordChanges(): Promise<ChangeLog[]> {
 
   // 삭제된 캠페인 감지
   const currentIds = new Set(current.map(c => c.id))
-  for (const [id, old] of prev) {
+  for (const [id, old] of Array.from(prev.entries())) {
     if (!currentIds.has(id)) {
       detected.push({
         id: `auto_del_${id}_${Date.now()}`,
