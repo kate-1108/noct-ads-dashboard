@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const alerts = generateAlerts(campaigns, profitMap, bepRoas)
 
-    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
     res.json({
       campaigns,
       alerts,
