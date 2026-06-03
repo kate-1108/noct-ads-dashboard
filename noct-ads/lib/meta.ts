@@ -13,20 +13,37 @@ const FIELDS = [
   'website_ctr',
 ].join(',')
 
+const CAMPAIGN_FIELDS = 'id,name,status,effective_status'
+
 export async function fetchCampaigns(datePreset = 'last_30d'): Promise<CampaignMetrics[]> {
-  if (!TOKEN || TOKEN === '' || !ACCOUNT || ACCOUNT === '') {
+  if (!TOKEN || !ACCOUNT) {
     console.warn('META credentials not set — returning mock data')
     return getMockData()
   }
 
+  // 캠페인 상태 별도 조회
+  const statusMap = new Map<string, string>()
+  try {
+    const statusUrl = `${BASE}/${ACCOUNT}/campaigns?fields=${CAMPAIGN_FIELDS}&limit=100&access_token=${TOKEN}`
+    const statusRes = await fetch(statusUrl, { cache: 'no-store' })
+    if (statusRes.ok) {
+      const statusJson = await statusRes.json()
+      for (const c of (statusJson.data || [])) {
+        statusMap.set(c.id, c.effective_status || c.status || 'UNKNOWN')
+      }
+    }
+  } catch (e) {
+    console.warn('Status fetch failed:', e)
+  }
+
   const url = `${BASE}/${ACCOUNT}/insights?level=campaign&fields=${FIELDS}&date_preset=${datePreset}&access_token=${TOKEN}`
-  const res = await fetch(url, { next: { revalidate: 3600 } }) // 1시간 캐시
+  const res = await fetch(url, { cache: 'no-store' })
   if (!res.ok) {
     console.error('Meta API error:', await res.text())
     return getMockData()
   }
   const json = await res.json()
-  return (json.data || []).map(parseRow)
+  return (json.data || []).map((row: any) => parseRow(row, statusMap))
 }
 
 function getAction(actions: any[], type: string): number {
@@ -35,7 +52,7 @@ function getAction(actions: any[], type: string): number {
   return found ? parseFloat(found.value) : 0
 }
 
-function parseRow(row: any): CampaignMetrics {
+function parseRow(row: any, statusMap?: Map<string, string>): CampaignMetrics {
   const purchases = getAction(row.actions, 'offsite_conversion.fb_pixel_purchase')
   const purchaseValue = getAction(row.action_values, 'offsite_conversion.fb_pixel_purchase')
   const lpViews = getAction(row.actions, 'landing_page_view')
@@ -45,7 +62,7 @@ function parseRow(row: any): CampaignMetrics {
   return {
     id: row.campaign_id,
     name: row.campaign_name,
-    status: row.status || 'UNKNOWN',
+    status: statusMap?.get(row.campaign_id) || 'UNKNOWN',
     spend,
     impressions: parseInt(row.impressions || '0'),
     reach: parseInt(row.reach || '0'),

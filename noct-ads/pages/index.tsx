@@ -15,10 +15,21 @@ const PERIODS = [
   { label: '30일', value: 'last_30d' },
 ]
 
+// 학습 기간 계산
+function getLearningDays(startDate: string): number | null {
+  if (!startDate) return null
+  const start = new Date(startDate)
+  const now = new Date()
+  const diff = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  return diff >= 0 && diff <= 14 ? diff : null
+}
+
 export default function Dashboard() {
   const [period, setPeriod] = useState('last_30d')
   const [activeAlert, setActiveAlert] = useState<Alert | null>(null)
   const [activeMetric, setActiveMetric] = useState<string | null>(null)
+  const [learningDates, setLearningDates] = useState<Record<string, string>>({})
+  const [showLearningInput, setShowLearningInput] = useState<string | null>(null)
 
   const { data, isLoading, mutate } = useSWR(`/api/campaigns?period=${period}`, fetcher, {
     refreshInterval: 3600000, // 1시간마다 자동 갱신
@@ -137,6 +148,10 @@ export default function Dashboard() {
                     alerts={alerts.filter(a => a.campaignId === c.id)}
                     activeMetric={activeMetric}
                     onMetricClick={setActiveMetric}
+                    learningStartDate={learningDates[c.id] || ''}
+                    onSetLearningDate={(date: string) => setLearningDates((prev: Record<string, string>) => ({ ...prev, [c.id]: date }))}
+                    showInput={showLearningInput === c.id}
+                    onToggleInput={() => setShowLearningInput(showLearningInput === c.id ? null : c.id)}
                   />
                 ))}
               </div>
@@ -261,17 +276,23 @@ function DetailBlock({ label, text, color }: { label: string; text: string; colo
 }
 
 function CampaignCard({
-  campaign, bepRoas, alerts, activeMetric, onMetricClick
+  campaign, bepRoas, alerts, activeMetric, onMetricClick,
+  learningStartDate, onSetLearningDate, showInput, onToggleInput
 }: {
   campaign: CampaignMetrics
   bepRoas: number
   alerts: Alert[]
   activeMetric: string | null
   onMetricClick: (k: string | null) => void
+  learningStartDate: string
+  onSetLearningDate: (date: string) => void
+  showInput: boolean
+  onToggleInput: () => void
 }) {
-  const roasOk = campaign.roas >= bepRoas
   const roasColor = campaign.roas >= bepRoas ? 'var(--green)' : campaign.roas >= bepRoas * 0.7 ? 'var(--yellow)' : 'var(--red)'
   const statusColor = campaign.status === 'ACTIVE' ? 'var(--green)' : 'var(--text3)'
+  const learningDays = getLearningDays(learningStartDate)
+  const isLearning = learningDays !== null
 
   const metrics = [
     { key: 'roas', label: 'ROAS', value: campaign.roas.toFixed(2), color: roasColor, sub: `BEP ${bepRoas.toFixed(2)}` },
@@ -295,10 +316,25 @@ function CampaignCard({
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
             {campaign.name.length > 50 ? campaign.name.slice(0, 50) + '…' : campaign.name}
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={{ fontSize: 11, color: statusColor, fontWeight: 500 }}>● {campaign.status}</span>
             <span style={{ fontSize: 11, color: 'var(--text3)' }}>{campaign.dateStart} ~ {campaign.dateEnd}</span>
+            {isLearning && (
+              <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 100, background: '#1a2a3a', color: '#5b9ef7', border: '1px solid #185FA5' }}>
+                학습 중 D+{learningDays} / 14
+              </span>
+            )}
+            <button onClick={onToggleInput} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 100, border: '1px solid var(--border2)', background: 'transparent', color: 'var(--text3)', cursor: 'pointer' }}>
+              {isLearning ? '학습 기간 수정' : '학습 기간 설정'}
+            </button>
           </div>
+          {showInput && (
+            <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ fontSize: 11, color: 'var(--text3)' }}>광고 시작일:</span>
+              <input type='date' value={learningStartDate} onChange={e => onSetLearningDate(e.target.value)} style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, border: '1px solid var(--border2)', background: 'var(--bg3)', color: 'var(--text)' }} />
+              {isLearning && <span style={{ fontSize: 11, color: 'var(--blue)' }}>알림은 학습 완료(D+14) 후 정상 기준 적용</span>}
+            </div>
+          )}
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)' }}>지출</div>
