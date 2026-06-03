@@ -20,12 +20,28 @@ export default function ChangelogPage() {
     detail: '',
   })
   const [saving, setSaving] = useState(false)
+  const [detecting, setDetecting] = useState(false)
+  const [detectResult, setDetectResult] = useState<string | null>(null)
 
   const { data: campaignsData } = useSWR('/api/campaigns?period=last_30d', fetcher)
   const campaigns = campaignsData?.campaigns || []
 
   const logsUrl = filterCampaign !== 'all' ? `/api/changelog?campaignId=${filterCampaign}` : '/api/changelog'
   const { data: logs = [] } = useSWR<ChangeLog[]>(logsUrl, fetcher, { refreshInterval: 5000 })
+
+  async function runDetect() {
+    setDetecting(true)
+    setDetectResult(null)
+    try {
+      const res = await fetch('/api/detect', { method: 'POST' })
+      const json = await res.json()
+      setDetectResult(json.detected > 0 ? `${json.detected}개 변경사항 감지됨!` : '변경사항 없음')
+      await mutate(logsUrl)
+    } catch {
+      setDetectResult('감지 실패')
+    }
+    setDetecting(false)
+  }
 
   async function saveLog() {
     if (!form.title || !form.date) return
