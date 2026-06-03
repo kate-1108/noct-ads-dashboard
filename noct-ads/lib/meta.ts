@@ -5,7 +5,7 @@ const TOKEN = process.env.META_ACCESS_TOKEN
 const ACCOUNT = process.env.META_AD_ACCOUNT_ID // act_XXXXXXX
 
 const FIELDS = [
-  'campaign_name', 'campaign_id', 'status',
+  'campaign_name', 'campaign_id',
   'spend', 'impressions', 'reach', 'frequency', 'cpm',
   'clicks', 'inline_link_clicks', 'inline_link_click_ctr',
   'cost_per_inline_link_click',
